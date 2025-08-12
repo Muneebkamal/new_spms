@@ -96,11 +96,9 @@
                 <span>Select images to swip<!--.span-->
             </span></div>
         </div>
-        <div class="tab-content">
-            <div class="tab-pane active1 p-3" id="photos" role="tabpanel" aria-labelledby="photos-tab">
-                <button class="btn btn-block font-weight-bold log_btn btn-lg " id="downloadCanvas">Download Image</button>
-                <!--<button class="btn btn-block font-weight-bold log_btn btn-lg " id="downloadPDF">Download PDF</button>-->
-            </div>
+        <div class="">
+            <button class="btn btn-block font-weight-bold log_btn btn-lg " id="downloadCanvas">Download Image</button>
+            <!--<button class="btn btn-block font-weight-bold log_btn btn-lg " id="downloadPDF">Download PDF</button>-->
         </div>
         </div>
     </section>
@@ -115,7 +113,8 @@
         var variableA = '';
         var variableB = '';
         var images = @json($imagesWithUrls);
-        
+        var placeholder = "{{ asset('/assets/logos/spms-nav-logo.png') }}"
+
         function setGridStyle(id) {
             var container = $('#image_grid');
             container.empty();
@@ -124,22 +123,22 @@
                 container.append(`
                     <div class="row">
                         <div class="col-8 p-0">
-                            <img src="${images[0] || ''}" class="lg-image" alt="">
+                            <img src="${images[0] ?? placeholder}" class="lg-image" alt="">
                             <div class="d-flex">
-                                <img src="${images[1] || ''}" class="md-image w-50 draggable-image" alt="">
-                                <img src="${images[2] || ''}" class="md-image w-50 draggable-image" alt="">
+                                <img src="${images[1] ?? placeholder}" class="md-image w-50 draggable-image" alt="">
+                                <img src="${images[2] ?? placeholder}" class="md-image w-50 draggable-image" alt="">
                             </div>
                         </div>
                         <div class="col-4 p-0">
                             <div class="row h-100 flex-column">
                                 <div class="col">
-                                    <img src="${images[3] || ''}" class="md-image draggable-image" alt="">
+                                    <img src="${images[3] ?? placeholder}" class="md-image draggable-image" alt="">
                                 </div>
                                 <div class="col">
-                                    <img src="${images[4] || ''}" class="md-image draggable-image" alt="">
+                                    <img src="${images[4] ?? placeholder}" class="md-image draggable-image" alt="">
                                 </div>
                                 <div class="col">
-                                    <img src="${images[5] || ''}" class="md-image draggable-image" alt="">
+                                    <img src="${images[5] ?? placeholder}" class="md-image draggable-image" alt="">
                                 </div>
                             </div>
                         </div>
@@ -152,21 +151,21 @@
                         <div class="col-4 p-0">
                             <div class="row h-100 flex-column">
                                 <div class="col">
-                                    <img src="${images[0] || ''}" class="md-image" alt="">
+                                    <img src="${images[0] ?? placeholder}" class="md-image" alt="">
                                 </div>
                                 <div class="col">
-                                    <img src="${images[1] || ''}" class="md-image" alt="">
+                                    <img src="${images[1] ?? placeholder}" class="md-image" alt="">
                                 </div>
                                 <div class="col">
-                                    <img src="${images[2] || ''}" class="md-image" alt="">
+                                    <img src="${images[2] ?? placeholder}" class="md-image" alt="">
                                 </div>
                             </div>
                         </div>
                         <div class="col-8 p-0">
-                            <img src="${images[3] || ''}" class="lg-image" alt="">
+                            <img src="${images[3] ?? placeholder}" class="lg-image" alt="">
                             <div class="d-flex">
-                                <img src="${images[4] || ''}" class="md-image w-50" alt="">
-                                <img src="${images[5] || ''}" class="md-image w-50" alt="">
+                                <img src="${images[4] ?? placeholder}" class="md-image w-50" alt="">
+                                <img src="${images[5] ?? placeholder}" class="md-image w-50" alt="">
                             </div>
                         </div>
                     </div>`);
@@ -176,19 +175,19 @@
                 container.append(`
                     <div class="row">
                         <div class="col-12 p-0">
-                            <img src="${images[0] || ''}" class="xl-image" alt="">
+                            <img src="${images[0] ?? placeholder}" class="xl-image" alt="">
                         </div>
                         <div class="col-3 p-0">
-                            <img src="${images[1] || ''}" class="sm-image" alt="">
+                            <img src="${images[1] ?? placeholder}" class="sm-image" alt="">
                         </div>
                         <div class="col-3 p-0">
-                            <img src="${images[2] || ''}" class="sm-image" alt="">
+                            <img src="${images[2] ?? placeholder}" class="sm-image" alt="">
                         </div>
                         <div class="col-3 p-0">
-                            <img src="${images[3] || ''}" class="sm-image" alt="">
+                            <img src="${images[3] ?? placeholder}" class="sm-image" alt="">
                         </div>
                         <div class="col-3 p-0">
-                            <img src="${images[4] || ''}" class="sm-image" alt="">
+                            <img src="${images[4] ?? placeholder}" class="sm-image" alt="">
                         </div>
                     </div>`);
             }
@@ -197,16 +196,16 @@
                 container.append(`
                     <div class="row">
                         <div class="col-4 p-0">
-                            <img src="${images[0] || ''}" class="md-image" />
-                            <img src="${images[1] || ''}" class="lg-image" />
+                            <img src="${images[0] ?? placeholder}" class="md-image" />
+                            <img src="${images[1] ?? placeholder}" class="lg-image" />
                         </div>
                         <div class="col-4 p-0">
-                            <img src="${images[2] || ''}" class="lg-image" />
-                            <img src="${images[3] || ''}" class="md-image" />
+                            <img src="${images[2] ?? placeholder}" class="lg-image" />
+                            <img src="${images[3] ?? placeholder}" class="md-image" />
                         </div>
                         <div class="col-4 p-0">
-                            <img src="${images[4] || ''}" class="md-image" />
-                            <img src="${images[5] || ''}" class="lg-image" />
+                            <img src="${images[4] ?? placeholder}" class="md-image" />
+                            <img src="${images[5] ?? placeholder}" class="lg-image" />
                         </div>
                     </div>`);
             }
@@ -215,22 +214,22 @@
                 container.append(`
                     <div class="row">
                         <div class="col-4 p-0">
-                            <img src="${images[0] || ''}" class="md-image" />
+                            <img src="${images[0] ?? placeholder}" class="md-image" />
                         </div>
                         <div class="col-4 p-0">
-                            <img src="${images[1] || ''}" class="md-image" />
+                            <img src="${images[1] ?? placeholder}" class="md-image" />
                         </div>
                         <div class="col-4 p-0">
-                            <img src="${images[2] || ''}" class="md-image" />
+                            <img src="${images[2] ?? placeholder}" class="md-image" />
                         </div>
                         <div class="col-4 p-0">
-                            <img src="${images[3] || ''}" class="md-image" />
+                            <img src="${images[3] ?? placeholder}" class="md-image" />
                         </div>
                         <div class="col-4 p-0">
-                            <img src="${images[4] || ''}" class="md-image" />
+                            <img src="${images[4] ?? placeholder}" class="md-image" />
                         </div>
                         <div class="col-4 p-0">
-                            <img src="${images[5] || ''}" class="md-image" />
+                            <img src="${images[5] ?? placeholder}" class="md-image" />
                         </div>
                     </div>`);
             }
