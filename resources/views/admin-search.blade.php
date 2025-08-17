@@ -5,6 +5,22 @@
 
 <link rel="stylesheet" href="{{ asset('assets/multi-select/multi-select.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/parsley-plugin/style.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&display=swap" rel="stylesheet">
+<style>
+@font-face {
+    font-family: 'Noto Sans SC';
+    src: url('{{ asset("fonts/NotoSansSC-Regular.ttf") }}') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+.pdf-content {
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    color: black;
+}
+</style>
 {{-- <style>
     body {
         font-size: 12px !important;
@@ -167,12 +183,20 @@
                     <input type="checkbox" id="new_released_剛吉" class="mt-2" name="options[]" value="New Released 剛吉">
                     <label class="font-weight-bold ml-1" for="new_released_剛吉">New
                         Released 剛吉</label>
-
+                    <select class="form-control" id="new_released_date_select" style="display: none" name="new_released_date">
+                        <option value="">-- Select --</option>
+                        <option value="1_week">Within 1 week</option>
+                        <option value="2_week">Within 2 weeks</option>
+                        <option value="1_month">Within 1 month</option>
+                    </select>
                 </div>
                 
                 <div class="col-6">
                     <input type="checkbox" id="rent_out" class="mt-2" name="options[]" value="Rent Out 巳租">
                     <label class="font-weight-bold ml-1" for="rent_out">Rent Out 巳租</label>
+                    <div class="w-100" id="daterangediv" style="display: none;">
+                        <input type="text" name="rent_out_range" class="form-control"  id="daterange" placeholder="Select date range" />
+                    </div>
                 </div>
             </div>
 
@@ -254,7 +278,7 @@
             </div>
             <div class="col-md-6">
                 <button class="btn btn-outline-info my-2 my-sm-0" id="toggle_layout" style="float:right;display:none;">More</button>
-                <button class="btn btn-outline-info my-2 my-sm-0 mx-1" id="makeExcel" data-toggle="modal" data-target="#columnModal" style="float:right;display:none">Export as Excel</button>
+                <button class="btn btn-outline-info my-2 my-sm-0 mx-1" id="makeExcel" data-toggle="modal" data-target="#columnModal" style="float:right;display:none">Export as Excel/PDF</button>
                 <button class="btn btn-outline-info my-2 my-sm-0" id="mark" style="float:right;display:none">Mark</button>
                 <button class="btn btn-outline-success my-2 my-sm-0 mx-1" id="simple_layout" style="float:right;display:none;">檢視</button>
             </div>
@@ -375,8 +399,9 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-end p-4">
-                    <button type="button" class="btn btn-secondary mx-1" data-dismiss="modal">Close</button>
-                    <button type="button" id="downloadExcel" class="btn btn-primary">Download file</button>
+                    <button type="button" class="btn btn-danger mx-1" data-dismiss="modal">Close</button>
+                    <button type="button" id="downloadExcel" class="btn btn-primary">Export as Excel</button>
+                    <button type="button" id="downloadPDF" class="btn btn-primary mx-1">Export as PDF</button>
                 </div>
                 <p id="colerror"></p>
             </div>
@@ -392,6 +417,16 @@
 
 <script src="{{ asset('assets/multi-select/multiselect.js') }}"></script>
 <script src="{{ asset('assets/parsley-plugin/script.js') }}"></script>
+<!-- Moment.js -->
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+
+<!-- Date Range Picker CSS & JS -->
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- pdfMake -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
 
 <script>
     $('select[multiple]').multiselect({
@@ -636,7 +671,7 @@
                                     data: 'rental_price',
                                     render: function(data) {
                                         if (data !== null && !isNaN(data)) {
-                                            return `<span style="color:blue">${data.toFixed(2)}</span>`;
+                                            return `<span style="color:blue">${data}</span>`;
                                         }
                                         return `<span style="color:blue">0.00</span>`;
                                     }
@@ -647,7 +682,7 @@
                                     data: 'selling_price',
                                     render: function(data) {
                                         if (data !== null && !isNaN(data)) {
-                                            return `<span style="color:blue">${data.toFixed(2)}</span>`;
+                                            return `<span style="color:blue">${data}</span>`;
                                         }
                                         return '<span style="color:blue">0.00</span>';
                                     }
@@ -1037,28 +1072,6 @@
             return;
         }
 
-        // $.ajax({
-        //     url: '/export-selected-columns',
-        //     type: 'POST',
-        //     data: {
-        //         properties: selectedIds,
-        //         columns: selectedColumns,
-        //         _token: $('meta[name="csrf-token"]').attr('content')
-        //     },
-        //     xhrFields: {
-        //         responseType: 'blob'
-        //     },
-        //     success: function(data) {
-        //         var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        //         var link = document.createElement('a');
-        //         link.href = window.URL.createObjectURL(blob);
-        //         link.download = 'selected_columns.xlsx';
-        //         link.click();
-        //     },
-        //     error: function(err) {
-        //         console.error('Error downloading Excel:', err);
-        //     }
-        // });
         $.ajax({
             url: '/export-selected-columns',
             type: 'POST',
@@ -1074,13 +1087,86 @@
                 link.href = url;
                 link.download = 'boshinghk-retail.xlsx';
                 link.click();
-                URL.revokeObjectURL(url); // Clean up the URL object
+                URL.revokeObjectURL(url);
             },
             error: function(error) {
                 console.error('Error downloading Excel file:', error);
             }
         });
 
+    });
+
+    // $('#downloadPDF').on('click', function() {
+    //     var selectedColumns = [];
+    //     $('#checkboxContainer input[type="checkbox"]:checked').not('#checkbox-all-columns').each(function() {
+    //         selectedColumns.push($(this).val());
+    //     });
+
+    //     if (selectedColumns.length === 0) {
+    //         $('#colerror').text('Please select at least one column!');
+    //         return;
+    //     }
+
+    //     $.ajax({
+    //         url: '/export-selected-columns-pdf',
+    //         type: 'POST',
+    //         data: {
+    //             properties: selectedIds,
+    //             columns: selectedColumns,
+    //             _token: $('meta[name="csrf-token"]').attr('content')
+    //         },
+    //         xhrFields: { responseType: 'blob' },
+    //         success: function(blob) {
+    //             const url = URL.createObjectURL(blob);
+    //             const link = document.createElement('a');
+    //             link.href = url;
+    //             link.download = 'document.pdf';
+    //             link.click();
+    //             URL.revokeObjectURL(url);
+    //         },
+    //         error: function(error) {
+    //             console.error('Error downloading PDF file:', error);
+    //         }
+    //     });
+    // });
+    
+    $('#downloadPDF').on('click', function () {
+        // Collect selected columns
+        var selectedColumns = [];
+        $('#checkboxContainer input[type="checkbox"]:checked')
+            .not('#checkbox-all-columns')
+            .each(function () {
+                selectedColumns.push($(this).val());
+            });
+
+        if (selectedColumns.length === 0) {
+            $('#colerror').text('Please select at least one column!');
+            return;
+        }
+
+        const $btn = $(this)
+            .prop('disabled', true)
+            .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
+
+        // AJAX call to Laravel controller
+        $.ajax({
+            type: 'POST',
+            url: '/export-selected-columns-pdf',
+            data: {
+                properties: selectedIds,
+                columns: selectedColumns,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            xhrFields: {
+                responseType: 'blob' // download file
+            },
+            success: function(blob){
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = 'document.pdf';
+                link.click();
+            }
+        });
     });
 
     $(document).on('click', '#mark', function () {
@@ -1116,6 +1202,34 @@
             }
             $("#search").click();
         }
+    });
+</script>
+<script>
+    $('#new_released_剛吉').click(function() {
+        $('#new_released_date_select').val('')
+        $('#new_released_date_select').toggle()
+    })
+
+    $(function () {
+        $("#rent_out").on("change",function() {
+            $('#daterangediv').toggle()
+        })
+        flatpickr("#daterange", {
+            mode: "range",
+            dateFormat: "d-m-Y",
+            altInput: true,
+            altFormat: "d-m-Y",
+            allowInput: true,
+            monthSelectorType: 'dropdown',
+            yearSelectorType: 'dropdown',
+            onClose: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length === 2) {
+                    const start = flatpickr.formatDate(selectedDates[0], "d-m-Y");
+                    const end = flatpickr.formatDate(selectedDates[1], "d-m-Y");
+                    instance.input.value = `${start} - ${end}`;
+                }
+            }
+        });
     });
 </script>
 @endsection

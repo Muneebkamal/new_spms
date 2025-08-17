@@ -59,6 +59,10 @@
                         <a class="nav-link text-white font-weight-bold" href="{{ url('/useful_words') }}">常用字</a>
                     </li>
                     <li class="nav-item p-1">
+                        {{-- Notice Board Page --}}
+                        <a class="nav-link text-white font-weight-bold" href="{{ url('/notice-board') }}">通告欄</a>
+                    </li>
+                    <li class="nav-item p-1">
                         {{-- Sign out --}}
                         <a class="nav-link text-white font-weight-bold" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             登出
@@ -111,6 +115,10 @@
                     <li class="nav-item p-1">
                         {{-- Commonly used words --}}
                         <a class="nav-link text-white font-weight-bold" href="{{ url('/useful_words') }}">常用字</a>
+                    </li>
+                    <li class="nav-item p-1">
+                        {{-- Notice Board Page --}}
+                        <a class="nav-link text-white font-weight-bold" href="{{ url('/notice-board') }}">通告欄</a>
                     </li>
                     <li class="nav-item p-1">
                         {{-- Sign out --}}

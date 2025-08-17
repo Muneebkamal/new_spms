@@ -368,7 +368,8 @@ class PropertiesController extends Controller
             }
         }
 
-        $property->others = json_encode($othersArray);
+        // $property->others = json_encode($othersArray);
+        $property->others = json_encode($othersArray, JSON_UNESCAPED_UNICODE);
         $property->other_date = json_encode($datesArray);
         $property->other_current_date = json_encode($currentDateArray);
         $property->other_free_formate = json_encode($formatsArray);
@@ -922,7 +923,8 @@ class PropertiesController extends Controller
             }
         }
 
-        $property->others = json_encode($othersArray);
+        // $property->others = json_encode($othersArray);
+        $property->others = json_encode($othersArray, JSON_UNESCAPED_UNICODE);
         $property->other_date = json_encode($datesArray);
         $property->other_current_date = json_encode($currentDateArray);
         $property->other_free_formate = json_encode($formatsArray);
