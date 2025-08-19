@@ -72,6 +72,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/photo-delete/{id}', [PropertiesController::class, 'photoDelete'])->name('photo.delete');
 
     Route::delete('/property/{id}', [PropertiesController::class, 'destroy'])->name('property.destroy');
+    Route::get('/properties/delete-all', [PropertiesController::class, 'confirmDelete'])->name('properties.confirmDelete');
+    Route::post('/properties/delete-all', [PropertiesController::class, 'deleteAll'])->name('properties.deleteAll');
 
     Route::get('/create-staff', [CreateAgentController::class, 'index'])->name('create-agent')->middleware('log.agent.activity');
     Route::post('/create-staff/store', [CreateAgentController::class, 'store'])->name('create-agent.store');

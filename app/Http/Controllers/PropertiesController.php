@@ -1101,4 +1101,31 @@ class PropertiesController extends Controller
             'message' => 'Property deleted successfully.'
         ]);
     }
+
+    public function confirmDelete()
+    {
+        return view('properties.confirm-delete');
+    }
+
+    public function deleteAll(Request $request)
+    {
+        $pin = $request->input('pin');
+        $correctPin = '1234';
+
+        if ($pin !== $correctPin) {
+            return back()->with('error', 'Invalid PIN! Try again.');
+        }
+
+        Property::truncate();
+        Photo::truncate();
+
+        $folderPath = public_path('properties');
+        if (File::exists($folderPath)) {
+            File::deleteDirectory($folderPath);
+            File::makeDirectory($folderPath);
+        }
+
+        return redirect()->route('properties.confirmDelete')
+                        ->with('success', 'All properties and files deleted!');
+    }
 }

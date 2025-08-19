@@ -288,7 +288,7 @@
             <div id="main_layout" style="display:none;">
             </div>
             <div id="simple_layout_div" style="display: none;">
-                <div id="example_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
+                <div id="example_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer" style="overflow: scroll;">
                     <table class="table table-bordered dataTable no-footer" id="search-table" style="width: 100%;">
                         <thead>
                             <tr>
