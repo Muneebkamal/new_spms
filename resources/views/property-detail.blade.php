@@ -3,98 +3,114 @@
 @section('styles')
     <!-- Magnific Popup core CSS file -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css">
-    {{-- <style>
-        body {
-            font-size: 12px !important;
+    <style>
+        /* Modal Styles */
+        .modal-content {
+            border-radius: 10px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
         }
-        h6 {
-            font-size: 1rem;
-        }
-        .divider {
-            background-color: #274472;
-            height: 5px;
-            width: 100%;
-        }
-        .log_btn:hover {
-            background-color: #189AB4;
+
+        /* Modal Header */
+        .modal-header {
+            background-color: #007bff;
             color: #fff;
-        }
-        .room-num {
-            position: absolute;
-            bottom: 0px;
-            width: 100%;
-        }
-        .room-num input {
-            width: calc((100% - 34px) / 3);
-            background: rgba(255, 255, 255, 0.8);
-            border: none;
+            border-radius: 10px 10px 0 0;
+            padding: 15px;
             text-align: center;
-            outline: none;
         }
-        .share-extension {
-            position: absolute;
-            width: 60px;
-            height: 50px;
-            top: 0px;
-            right: 0px;
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
         }
-        .share-input {
-            position: absolute;
-            top: 10px;
-            right: 25px;
-            z-index: 10;
+
+        /* Close Button */
+        .modal-header .close {
+            color: #fff;
+            font-size: 24px;
         }
-        .list-group {
-            height: 300px;
-            background-color: skyblue;
-            /* width: 200px; */
-            overflow-y: scroll;
+
+        /* Image Container */
+        .img-container {
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
         }
-        .mfp-image-holder .mfp-close, .mfp-iframe-holder .mfp-close {
-            width: 70px;
-            height: 70px;
-            font-size: 80px;
-        }
-        .mfp-arrow:after {
-            border-top-width: 26px;
-            border-bottom-width: 26px;
-            top: 16px;
-        }
-        .mfp-arrow-left:after {
-            border-right: 32px solid #FFF;
-            margin-left: 33px;
-        }
-        .mfp-arrow-right:after {
-            border-left: 32px solid #FFF;
-            margin-left: 28px;
-        }
-        .mfp-arrow:after {
-            border-top-width: 26px;
-            border-bottom-width: 26px;
-            top: 16px;
-        }
-        .fix-img {
-            height: 300px !important;
-            object-fit: cover;
-            width: 100% !important;
-            max-width: 100%;
+
+        /* Spinners */
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
             display: block;
+            position: absolute;
         }
-        .container{
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            }
-            #map,
-            #pano {
-            float: left;
-            height: 230px;
-            width: 100%;
+
+        /* Hide images initially */
+        #originalImage, #flipImage {
+            display: none;
+            max-width: 100%;
+            transition: opacity 0.6s ease-in-out;
         }
-    </style> --}}
+
+        /* Image Labels */
+        .image-label {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        /* Flip Button */
+        .flip-btn {
+            position: absolute;
+            top: 102%;
+            left: 55%;
+            background: #007bff;
+            border: none;
+            color: white;
+            padding: 3px 3px;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .flip-btn:hover {
+            background: #0056b3;
+        }
+
+        /* Spinner Animation */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.6; }
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            animation: pulse 1.2s infinite ease-in-out;
+            border: .25em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+        }
+
+        /* Enhanced fade-in animation */
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        #originalImage, #flipImage {
+            animation: fadeInScale 0.8s ease-in-out;
+        }
+
+    </style>
 @endsection
 
 @section('content')
@@ -508,6 +524,7 @@
                             <button class="btn btn-info btn-sm" onclick="duplicateImagesToProperties('{{ $property->building }}', '{{ $property->code }}')">Share images with same building</button>
                         @endif
                     </div>
+                    <div class="spinner-border text-danger shadow-lg" id="ai_spinner" style="position: absolute; display:none; z-index: 9999; left: 50%;" role="status"></div>
                 </div>
 
                 <div class="popup-gallery">
@@ -547,6 +564,15 @@
                             <a href="{{ asset($images->image) }}" title="{{ $images->code }}">
                                 <img class="img-fluid fix-img shadow h-100" src="{{ asset($images->image) }}" alt="{{ $property->code }}" width="100%" title="{{ $property->code }}">
                             </a>
+                            @if($images->photoAi)
+                                <button class="btn flip-btn btn-primary"
+                                    data-image="{{ asset($images->photoAi->img_name) }}"
+                                    data-original="{{ asset($images->image) }}"
+                                    data-toggle="modal"
+                                    data-target="#flipModal">
+                                    A.I Flip
+                                </button>
+                            @endif
                         </div>
                         @endforeach
                     </div>                    
@@ -653,6 +679,40 @@
                 @endif
             </div>
         </div>
+        </div>
+    </div>
+
+    {{-- Flip modal Ai Images --}}
+    <div class="modal modal-xl fade" id="flipModal" tabindex="-1" role="dialog" aria-labelledby="flipModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header text-center">
+                    <h2 class="modal-title text-center" id="flipModalLabel">A.I Interior Decor</h2>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Original Image -->
+                        <div class="col-md-6 text-center">
+                            <h5 class="image-label">Original</h5>
+                            <div class="img-container">
+                                <div id="originalLoader" class="spinner-border text-primary" role="status"></div>
+                                <img id="originalImage" src="" alt="Original Image" class="img-fluid" />
+                            </div>
+                        </div>
+                        <!-- AI-Enhanced Image -->
+                        <div class="col-md-6 text-center">
+                            <h5 class="image-label">Enhanced</h5>
+                            <div class="img-container">
+                                <div id="flipLoader" class="spinner-border text-primary" role="status"></div>
+                                <img id="flipImage" src="" alt="Enhanced Image" class="img-fluid" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1012,6 +1072,76 @@
     }
 
     window.initialize = initialize;
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#ai-decor-btn').click(function () {
+            var button = $(this); 
+
+            console.log(selectedImages); 
+            let processedCount = 0;
+            $("#ai_spinner").css('display','inline');
+
+            selectedImages.forEach((photoId, index) => {
+                $.ajax({
+                    url: "{{ route('ai.generate') }}",
+                    type: 'POST',
+                    data: { 
+                        photo_id: photoId,
+                        _token: "{{ csrf_token() }}"
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        if (res.status === 'exist') {
+                            console.log('AI image already exists');
+                        } else if (res.status === 'success') {
+                            console.log('AI image generated');
+                        } else {
+                            console.error('Error: ', res.message);
+                        }
+
+                        processedCount++;
+                        if (processedCount === selectedImages.length) {
+                            window.location.reload();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error: ", error);
+                        console.error("Response Text: ", xhr.responseText);
+                        alert('Error processing image: ' + photoId);
+                    },
+                    complete:function (){
+                        $("#ai_spinner").css('display','none');
+                    }
+                });
+            });
+        });
+    });
+
+    $(document).ready(function() {
+        $('.flip-btn').click(function() {
+            var imageSrc = $(this).data('image');
+            var originalSrc = $(this).data('original');
+            var modal = $('#flipModal'); // target modal
+
+            // Reset images & show loaders
+            modal.find('#flipImage, #originalImage').hide();
+            modal.find('#flipLoader, #originalLoader').show();
+
+            // Show original image
+            setTimeout(() => {
+                modal.find('#originalLoader').hide();
+                modal.find('#originalImage').attr('src', originalSrc).fadeIn();
+            }, 500);
+
+            // Show AI image
+            setTimeout(() => {
+                modal.find('#flipLoader').hide();
+                modal.find('#flipImage').attr('src', imageSrc).fadeIn();
+            }, 2000);
+        });
+    });
 </script>
 
 <script defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyACk1RzpwGH2o8goef4pgIP8C1-_BNDCD0&callback=initialize&v=weekly"></script>

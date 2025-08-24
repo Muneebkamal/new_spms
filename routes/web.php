@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\AdminSearchController;
+use App\Http\Controllers\AiImageController;
 use App\Http\Controllers\AllViewsController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommonWordsController;
 use App\Http\Controllers\CreateAgentController;
+use App\Http\Controllers\FormController;
 use App\Http\Controllers\NoticeBoardController;
 use App\Http\Controllers\PropertiesController;
 use App\Http\Controllers\ShareListController;
@@ -120,9 +122,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/fetch-words', [CommonWordsController::class, 'create'])->name('common.words.fetch');
     Route::delete('/delete-word/{id}', [CommonWordsController::class, 'destroy'])->name('common.words.delete');
 
-    Route::get('/hyperlinks', function () {
-        return view('online-form');
-    })->middleware('log.agent.activity');
+    // Route::get('/hyperlinks', function () {
+    //     return view('online-form');
+    // })->middleware('log.agent.activity');
+
+    Route::get('/hyperlinks', [FormController::class, 'index'])->name('hyperlinks')->middleware('log.agent.activity');
+    Route::post('/form/store', [FormController::class, 'store'])->name('form.store');
+    Route::post('/form/update/{id}', [FormController::class, 'update'])->name('form.update');
+    
     Route::get('/password-reset', function () {
         return view('password-reset');
     })->middleware('log.agent.activity');
@@ -162,6 +169,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notice-board', [NoticeBoardController::class, 'index'])->name('notice.board.index');
     Route::post('/notices', [NoticeBoardController::class, 'store'])->name('notices.store');
     Route::delete('/notices/{id}', [NoticeBoardController::class, 'destroy'])->name('notices.destroy');
+
+    Route::post('/ai-generate', [AiImageController::class, 'generate'])->name('ai.generate');
 
     // brfore
     // Route::get('/admin-views', function () {

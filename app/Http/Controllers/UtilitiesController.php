@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Property;
 use App\Models\Utility;
 use Illuminate\Http\Request;
 
@@ -41,9 +42,28 @@ class UtilitiesController extends Controller
     public function deleteValue(Request $request) {
         $utility = Utility::where('key', $request->key)->first();
         $values = explode(',', $utility->value);
+        $deleteValue = trim($values[$request->index]);
         unset($values[$request->index]);
         $utility->value = implode(',', array_values($values));
         $utility->save();
+
+        // Now update all properties where this column exists and contains the deleted value
+        $column = $request->key;
+
+        // Process properties in chunks (for performance on large data)
+        Property::whereNotNull($column)->chunk(100, function ($properties) use ($column, $deleteValue) {
+            foreach ($properties as $property) {
+                $propValues = array_filter(explode(',', $property->{$column}));
+                $propValues = array_map('trim', $propValues);
+
+                if (in_array($deleteValue, $propValues)) {
+                    $propValues = array_diff($propValues, [$deleteValue]);
+                    $property->{$column} = implode(',', $propValues);
+                    $property->save();
+                }
+            }
+        });
+
         return response()->json(['success' => true]);
     }
     

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Comment;
 use App\Models\Photo;
 use App\Models\Property;
 use App\Models\Utility;
@@ -410,75 +411,180 @@ class PropertiesController extends Controller
         return view('properties.properties-import');
     }
 
+    // public function importBulkProperties(Request $request)
+    // {
+    //     $request->validate([
+    //         'file' => 'required|mimes:xlsx'
+    //     ]);
+
+    //     $file = $request->file('file');
+    //     $headings = Excel::toArray([], $file)[0][0] ?? [];
+
+    //     $headingsNormalized = array_map(fn($h) => strtolower(str_replace('_', '', trim($h))), $headings);
+
+    //     $dbColumns = (new Property())->getConnection()->getSchemaBuilder()->getColumnListing((new Property())->getTable());
+
+    //     $excludedColumns = ['building_id', 'building_created_at', 'landlord_created_at', 'created_at', 'updated_at'];
+    //     $columns = array_diff($dbColumns, $excludedColumns);
+
+    //     $columnsNormalized = [];
+    //     foreach ($columns as $col) {
+    //         $columnsNormalized[strtolower(str_replace('_', ' ', $col))] = $col;
+    //     }
+
+    //     $rows = Excel::toArray([], $file)[0] ?? [];
+
+    //     $utilityColumns = ['district', 'usage', 'decorations', 'types', 'facilities'];
+    //     $validUtilities = [];
+
+    //     foreach ($utilityColumns as $col) {
+    //         $utilityData = Utility::where('key', $col)->value('value');
+    //         $validUtilities[$col] = $utilityData ? explode(',', $utilityData) : [];
+    //     }
+
+    //     foreach ($rows as $key => $row) {
+    //         if ($key === 0) continue;
+
+    //         $data = [];
+
+    //         foreach ($columnsNormalized as $normalizedCol => $originalCol) {
+    //             $index = array_search($normalizedCol, $headingsNormalized, true);
+    //             $value = ($index !== false && isset($row[$index])) ? trim($row[$index]) : null;
+
+    //             // Skip this iteration if 'code' is null or empty
+    //             if ($originalCol === 'code'|| $originalCol === 'building') {
+    //                 if (is_null($value) || $value === '') {
+    //                     continue 2;
+    //                 }
+    //                 if ($originalCol === 'code' && Property::where('code', $value)->exists()) {
+    //                     continue 2;
+    //                 }
+    //             }
+
+    //             // Validate utility columns
+    //             if (in_array($originalCol, $utilityColumns) && !in_array($value, $validUtilities[$originalCol])) {
+    //                 $value = null;
+    //             }
+
+    //             $data[$originalCol] = $value;
+    //         }
+
+    //         // Fixed fields
+    //         $data['agent_name'] = auth()->user()->name;
+    //         $data['individual'] = 'No';
+    //         $data['separate'] = 'No';
+    //         $data['others'] = json_encode([]);
+    //         $data['other_date'] = json_encode([]);
+    //         $data['other_current_date'] = json_encode([]);
+    //         $data['other_free_formate'] = json_encode([]);
+
+    //         if (isset($data['code'])) {
+    //             Property::create($data);
+    //         }
+    //     }
+
+    //     return back()->with('success', 'Properties imported successfully.');
+    // }
+
     public function importBulkProperties(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx'
+            'file' => 'required|mimes:xlsx,csv'
         ]);
 
         $file = $request->file('file');
-        $headings = Excel::toArray([], $file)[0][0] ?? [];
-
-        $headingsNormalized = array_map(fn($h) => strtolower(str_replace('_', '', trim($h))), $headings);
-
-        $dbColumns = (new Property())->getConnection()->getSchemaBuilder()->getColumnListing((new Property())->getTable());
-
-        $excludedColumns = ['building_id', 'building_created_at', 'landlord_created_at', 'created_at', 'updated_at'];
-        $columns = array_diff($dbColumns, $excludedColumns);
-
-        $columnsNormalized = [];
-        foreach ($columns as $col) {
-            $columnsNormalized[strtolower(str_replace('_', ' ', $col))] = $col;
-        }
-
         $rows = Excel::toArray([], $file)[0] ?? [];
 
-        $utilityColumns = ['district', 'usage', 'decorations', 'types', 'facilities'];
-        $validUtilities = [];
-
-        foreach ($utilityColumns as $col) {
-            $utilityData = Utility::where('key', $col)->value('value');
-            $validUtilities[$col] = $utilityData ? explode(',', $utilityData) : [];
-        }
-
         foreach ($rows as $key => $row) {
-            if ($key === 0) continue;
+            if ($key === 0) continue; // skip header row
 
-            $data = [];
+            $code = trim($row[0] ?? '');
+            if (empty($code)) continue;
 
-            foreach ($columnsNormalized as $normalizedCol => $originalCol) {
-                $index = array_search($normalizedCol, $headingsNormalized, true);
-                $value = ($index !== false && isset($row[$index])) ? trim($row[$index]) : null;
-
-                // Skip this iteration if 'code' is null or empty
-                if ($originalCol === 'code'|| $originalCol === 'building') {
-                    if (is_null($value) || $value === '') {
-                        continue 2;
-                    }
-                    if ($originalCol === 'code' && Property::where('code', $value)->exists()) {
-                        continue 2;
-                    }
-                }
-
-                // Validate utility columns
-                if (in_array($originalCol, $utilityColumns) && !in_array($value, $validUtilities[$originalCol])) {
-                    $value = null;
-                }
-
-                $data[$originalCol] = $value;
+            // Skip if duplicate
+            if (Property::where('code', $code)->exists()) {
+                continue;
             }
 
-            // Fixed fields
-            $data['agent_name'] = auth()->user()->name;
-            $data['individual'] = 'No';
-            $data['separate'] = 'No';
-            $data['others'] = json_encode([]);
-            $data['other_date'] = json_encode([]);
-            $data['other_current_date'] = json_encode([]);
-            $data['other_free_formate'] = json_encode([]);
+            $username = auth()->user()->name ?? 'system';
 
-            if (isset($data['code'])) {
-                Property::create($data);
+            // --- Calculate selling/rental psf ---
+            $gross_sf      = $row[26] ?? null;
+            $net_sf        = $row[27] ?? null;
+            $selling_price = $row[28] ?? null;
+            $rent_price    = $row[29] ?? null;
+
+            $selling_g = ($gross_sf && $selling_price) ? (floatval($selling_price) * 1000000 / floatval($gross_sf)) : 0;
+            $selling_n = ($net_sf && $selling_price) ? (floatval($selling_price) * 1000000 / floatval($net_sf)) : 0;
+            $renting_g = ($gross_sf && $rent_price) ? (floatval($rent_price) / floatval($gross_sf)) : 0;
+            $renting_n = ($net_sf && $rent_price) ? (floatval($rent_price) / floatval($net_sf)) : 0;
+
+            // --- Insert into properties table (all columns together) ---
+            $facilities = $row[24] ?? null;
+            $types      = $row[25] ?? null;
+
+            $facilitiesStr = $facilities
+                ? implode(', ', array_map('trim', explode(',', $facilities)))
+                : null;
+
+            $typesStr = $types
+                ? implode(', ', array_map('trim', explode(',', $types)))
+                : null;
+            $property = Property::create([
+                'code'            => $code,
+                'district'        => $row[1] ?? null,
+                'building'        => $row[2] ?? null,
+                'street'          => $row[3] ?? null,
+                'year'            => $row[4] ?? null,
+                'block'           => $row[5] ?? null,
+                'floor'           => $row[6] ?? null,
+                'flat'            => $row[7] ?? null,
+                'no_room'         => $row[8] ?? null,
+                'cargo_lift'      => $row[9] ?? null,
+                'customer_lift'   => $row[10] ?? null,
+                'tf_hr'           => $row[11] ?? null,
+                'enter_password'  => $row[12] ?? null,
+                'contact1'        => $row[14] ?? null,
+                'number1'         => $row[15] ?? null,
+                'contact2'        => $row[16] ?? null,
+                'number2'         => $row[17] ?? null,
+                'contact3'        => $row[18] ?? null,
+                'number3'         => $row[19] ?? null,
+                'landlord_name'   => $row[20] ?? null,
+                'bank'            => $row[21] ?? null,
+                'bank_account'    => $row[22] ?? null,
+                'remarks'         => $row[23] ?? null,
+                'facilities'      => $facilitiesStr,
+                'types'           => $typesStr,
+                'gross_sf'        => $gross_sf,
+                'net_sf'          => $net_sf,
+                'selling_price'   => $selling_price,
+                'rent_price'      => $rent_price,
+                'mgmf'            => $row[30] ?? null,
+                'rate'            => $row[31] ?? null,
+                'land'            => $row[32] ?? null,
+                'oths'            => $row[33] ?? null,
+                'selling_g'       => $selling_g,
+                'selling_n'       => $selling_n,
+                'renting_g'       => $renting_g,
+                'renting_n'       => $renting_n,
+                'agent_name'      => $username,
+
+                // ✅ always save as [] if null
+                'others'             => '[]',
+                'other_date'         => '[]',
+                'other_current_date' => '[]',
+                'other_free_formate' => '[]',
+                'other_created_by'   => '[]',
+            ]);
+
+            // --- Save comment in separate table ---
+            if (!empty($row[13])) {
+                Comment::create([
+                    'code'   => $property->code,
+                    'comment'       => $row[13],
+                    'user_id'   => auth()->user()->id,
+                ]);
             }
         }
 

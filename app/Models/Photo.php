@@ -22,4 +22,9 @@ class Photo extends Model
     {
         return $this->belongsTo(Property::class, 'code', 'code');
     }
+
+    public function photoAi()
+    {
+        return $this->hasOne(PhotoAi::class, 'photo_id');
+    }
 }

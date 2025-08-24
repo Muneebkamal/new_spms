@@ -22,7 +22,8 @@ class Property extends Model
         'facilities', 'types', 'decorations', 'usage', 'yt_link_1', 'yt_link_2', 
         'others', 'other_date', 'other_current_date', 'other_free_formate', 
         'gross_sf', 'net_sf', 'selling_price', 'selling_g', 'selling_n', 
-        'rental_price', 'rental_g', 'rental_n', 'mgmf', 'rate', 'land', 'oths'
+        'rental_price', 'rental_g', 'rental_n', 'mgmf', 'rate', 'land', 'oths',
+        'contact1', 'contact2', 'contact3', 'number1', 'number2', 'number3',
     ];
     protected $dates = ['deleted_at'];
 
