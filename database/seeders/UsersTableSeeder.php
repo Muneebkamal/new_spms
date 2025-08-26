@@ -19,6 +19,10 @@ class UsersTableSeeder extends Seeder
         $admin->email = 'admin@mail.com';
         $admin->password = Hash::make('password');
         $admin->role = 'admin';
+        $admin->contact_permission = 1;
+        $admin->photo_permission = 1;
+        $admin->image_merge_permission = 1;
+        $admin->add_view_permission = 1;
         $admin->save();
 
         $agent = new User;

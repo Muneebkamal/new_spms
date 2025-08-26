@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/delete-image', [PropertiesController::class, 'deleteImage'])->name('delete.image');
 
     Route::get('/admin-search', [AdminSearchController::class, 'index'])->name('admin.search.page')->middleware('log.agent.activity');
+    Route::get('/search-landlord', [AdminSearchController::class, 'agentIndex'])->name('agent.search.page')->middleware('log.agent.activity');
     Route::post('/admin/search/result', [AdminSearchController::class, 'search'])->name('admin.search.result');
     Route::post('/export-selected-columns', [AdminSearchController::class, 'exportSelectedColumns'])->name('export.selected.columns');
     Route::post('/export-selected-columns-pdf', [AdminSearchController::class, 'exportSelectedColumnsPDF'])->name('properties.export.pdf');
@@ -122,9 +123,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/fetch-words', [CommonWordsController::class, 'create'])->name('common.words.fetch');
     Route::delete('/delete-word/{id}', [CommonWordsController::class, 'destroy'])->name('common.words.delete');
 
-    // Route::get('/hyperlinks', function () {
-    //     return view('online-form');
-    // })->middleware('log.agent.activity');
+    Route::get('/announcements', function () {
+        return view('announcement.index');
+    })->middleware('log.agent.activity');
 
     Route::get('/hyperlinks', [FormController::class, 'index'])->name('hyperlinks')->middleware('log.agent.activity');
     Route::post('/form/store', [FormController::class, 'store'])->name('form.store');
@@ -171,6 +172,19 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/notices/{id}', [NoticeBoardController::class, 'destroy'])->name('notices.destroy');
 
     Route::post('/ai-generate', [AiImageController::class, 'generate'])->name('ai.generate');
+
+    Route::post('/users/{id}/reset-views', [UserController::class, 'resetViews'])->name('users.resetViews');
+
+    Route::get('/settings/agent-limit/get', [UtilitiesController::class, 'getAgentLimit'])
+    ->name('settings.agent-limit.get');
+    // routes/web.php
+    Route::post('/settings/agent-limit/update', [UtilitiesController::class, 'updateAgentLimit'])
+    ->name('settings.agent-limit.update');
+
+    Route::get('/view-permission', [UserController::class, 'viewPermission'])
+    ->name('view.permission');
+
+
 
     // brfore
     // Route::get('/admin-views', function () {

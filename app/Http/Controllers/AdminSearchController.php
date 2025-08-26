@@ -7,6 +7,7 @@ use App\Models\Utility;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 use Mpdf\Mpdf;
 use Mpdf\Config\ConfigVariables;
 use Mpdf\Config\FontVariables;
@@ -19,6 +20,16 @@ class AdminSearchController extends Controller
      * Display a listing of the resource.
      */
     public function index()
+    {   
+        $facilities = explode(',', Utility::where('key', 'facilities')->value('value'));
+        $types = explode(',', Utility::where('key', 'types')->value('value'));
+        $decorations = explode(',', Utility::where('key', 'decorations')->value('value'));
+        $usage = explode(',', Utility::where('key', 'usage')->value('value'));
+        $districts = explode(',', Utility::where('key', 'district')->value('value'));
+        return view('admin-search', compact('facilities', 'types', 'decorations', 'usage', 'districts'));
+    }
+
+    public function agentIndex()
     {   
         $facilities = explode(',', Utility::where('key', 'facilities')->value('value'));
         $types = explode(',', Utility::where('key', 'types')->value('value'));
@@ -100,8 +111,20 @@ class AdminSearchController extends Controller
 
     public function search(Request $request)
     {
+        $user = Auth::user();   
+        if($user->role == 'agent'){
+            if (!$user->incrementExportCount('search')) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Daily search limit reached.',
+                    'views'   => $user->exportCount['search']['count'] ?? 0
+                ], 429);
+            }
+        }
+
         $info = $request->info;
         $district = $request->district;
+        $contact = $request->contact;
         $types1 = $request->types1; 
         $facilities = $request->facilities;
         $types = $request->types;
@@ -137,6 +160,13 @@ class AdminSearchController extends Controller
                     ->orWhere('building', 'LIKE', "%{$info}%");
             })
             ->when($district !== 'All', fn($query) => $query->where('district', $district))
+            ->when($contact, function ($query) use ($contact) {
+                $query->where(function ($q) use ($contact) {
+                    $q->where('number1', 'LIKE', "%{$contact}%")
+                    ->orWhere('number2', 'LIKE', "%{$contact}%")
+                    ->orWhere('number3', 'LIKE', "%{$contact}%");
+                });
+            })
             ->when(is_array($types1) && count($types1), function ($query) use ($types1) {
                 foreach ($types1 as $type) {
                     $query->whereRaw("FIND_IN_SET(?, types)", [$type]);
@@ -239,12 +269,23 @@ class AdminSearchController extends Controller
         return response()->json([
             'message' => 'Search completed!',
             'data' => $search->values(), // reindex
-            'count' => $search->count()
+            'count' => $search->count(),
+            'views'   => $user->exportCount['search']['count'] ?? 0
         ]);
     }
 
     public function exportSelectedColumns(Request $request)
     {
+        $user = Auth::user();
+        if($user->role == 'agent'){
+            if (!$user->incrementExportCount('excel')) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Daily Excel export limit reached.'
+                ], 429);
+            }
+        }
+        
         $columnMapping = [
             'code' => 'Code',
             'building' => '大廈',
@@ -415,6 +456,16 @@ class AdminSearchController extends Controller
     // }
     public function exportSelectedColumnsPDF(Request $request)
     {
+        $user = Auth::user();
+        if($user->role == 'agent'){
+            if (!$user->incrementExportCount('pdf')) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Daily PDF export limit reached.'
+                ], 429);
+            }
+        }
+
         $columnMapping = [
             'code' => 'Code',
             'building' => 'Building',

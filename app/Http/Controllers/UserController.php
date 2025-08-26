@@ -33,7 +33,7 @@ class UserController extends Controller
     {
         $user = User::find($request->id);
 
-        if ($user && in_array($request->type, ['contact', 'photo', 'image_merge'])) {
+        if ($user && in_array($request->type, ['contact', 'photo', 'image_merge', 'add_view'])) {
             $column = $request->type . '_permission';
             $user->$column = $request->value;
             $user->save();
@@ -42,6 +42,28 @@ class UserController extends Controller
         }
 
         return response()->json(['success' => false, 'message' => 'Invalid ID.']);
+    }
+
+    public function resetViews($id)
+    {
+        $user = User::findOrFail($id);
+
+        $exportCount = $user->exportCount ?? [];
+
+        foreach ($exportCount as $key => &$value) {
+            $value['count'] = 0;
+            $value['date'] = now()->toDateString();
+        }
+
+        $user->exportCount = $exportCount;
+        $user->save();
+
+        return redirect()->back()->with('success', 'All counts reset successfully!');
+    }
+
+    public function viewPermission()
+    {
+        return view('add-view');
     }
 
     public function getShareCount()

@@ -21,40 +21,22 @@
     color: black;
 }
 </style>
-{{-- <style>
-    body {
-        font-size: 12px !important;
-    }
-    p {
-        font-size: 20px;
-        margin-bottom: 0;
-    }
-    td {
-        padding: 8px !important;
-    }
-    #search-table thead {
-        background-color: #f5f5f5 !important;
-    }
-    #search-table tbody tr:hover {
-        background-color: #f5f5f5 !important;
-    }
-    #search-table th, #search-table td {
-        text-align: center;
-        vertical-align: middle;
-    }
-    table.dataTable {
-        border-collapse: collapse !important;
-    }
-    .form-check-width {
-        width: 50%;
-    }
-</style> --}}
 @endsection
 
 @section('content')
 <section>
     <div class="container bg-white pr-4 pl-4  log_section pb-5 pt-lg-4">
-        <h4 class="font-weight-bold ">Landlord Information</h4>
+        <h4 class="font-weight-bold m-0">Landlord Information</h4>
+        @if(auth()->user()->role == 'agent')
+            @php
+                $today = \Carbon\Carbon::today()->toDateString();
+                $exportCount = auth()->user()->exportCount['search'] ?? null;
+                $count = ($exportCount && $exportCount['date'] === $today) ? $exportCount['count'] : "";
+            @endphp
+            <p class="m-0 text-muted" style="font-weight: 700;">
+                (<span id="view" class="font-weight-bold">{{ $count }}</span> views used today)
+            </p>
+        @endif
         <form id="admin-search-form" method="GET" data-parsley-validate>
             @csrf
             <div class="row">
@@ -97,6 +79,15 @@
                 </div>
             </div>
             
+            @if(auth()->user()->contact_permission == 1)
+            <div class="row">
+                <div class="col-12">
+                    <p class="m-0">Contact</p>
+                    <input class="form-control mr-sm-2 mb-3" type="text" name="contact" placeholder="Enter Contact Number" aria-label="Search">
+                </div>
+            </div>
+            @endif
+
             <div class="row mb-3">
                 <div class="col-12">
                     <p class="m-0">Facilities</p>
@@ -485,6 +476,7 @@
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
                 success: function(response) {
+                    $('#view').text(response.views);
                     form.find(":input").prop("disabled", false);
                     console.log(response);
                     const count = response.count;
@@ -599,6 +591,7 @@
                                             <a href="property/${item.code}" class="m-0" target="_blank">
                                                 <strong>Code:</strong> ${item.code}
                                             </a>
+                                            <input style="position: absolute;right: 10px;" type="checkbox" onchange="getSingleRow1(${item.building_id})" class="input-check share">
                                             <div class="d-inline">[${item.agent_name}] [${formattedDate}] [Pics: ${photosCount}]</div><br>
                                             <div class="d-inline mr-2"><strong>Building:</strong> ${item.building}</div>
                                             <div class="d-inline mr-2"><strong>Floor:</strong> ${item.floor || ''}</div>
@@ -806,8 +799,13 @@
                     }
                 },
                 error: function (xhr) {
+                    if (xhr.status === 429) {
+                        let res = xhr.responseJSON;
+                        $('#view').text(res.views);
+                        alert(res.message);
+                    }
                     console.error(xhr.responseText);
-                    alert('An error occurred while processing the request.');
+                    // alert('An error occurred while processing the request.');
                 }
             });
         });
@@ -1019,6 +1017,10 @@
         }
     }
 
+    function getSingleRow1(a) {
+        $('input.share[data-row-num='+a+']').click()
+    }
+
     function getSingleRow(checkbox) {
         const rowId = $(checkbox).data('row-num');
     
@@ -1080,6 +1082,7 @@
                 columns: selectedColumns,
                 _token: $('meta[name="csrf-token"]').attr('content')
             },
+            dataType: 'json',
             xhrFields: { responseType: 'blob' },
             success: function(blob) {
                 const url = URL.createObjectURL(blob);
@@ -1089,46 +1092,22 @@
                 link.click();
                 URL.revokeObjectURL(url);
             },
-            error: function(error) {
-                console.error('Error downloading Excel file:', error);
+            error: function(xhr) {
+                if (xhr.status === 429) {
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        alert(res.message ?? "Daily limit reached.");
+                    } catch (e) {
+                        alert("Daily limit reached."); // fallback
+                    }
+                } else {
+                    console.error('Error downloading Excel file:', xhr);
+                    alert("Something went wrong!"); // generic error
+                }
             }
         });
 
     });
-
-    // $('#downloadPDF').on('click', function() {
-    //     var selectedColumns = [];
-    //     $('#checkboxContainer input[type="checkbox"]:checked').not('#checkbox-all-columns').each(function() {
-    //         selectedColumns.push($(this).val());
-    //     });
-
-    //     if (selectedColumns.length === 0) {
-    //         $('#colerror').text('Please select at least one column!');
-    //         return;
-    //     }
-
-    //     $.ajax({
-    //         url: '/export-selected-columns-pdf',
-    //         type: 'POST',
-    //         data: {
-    //             properties: selectedIds,
-    //             columns: selectedColumns,
-    //             _token: $('meta[name="csrf-token"]').attr('content')
-    //         },
-    //         xhrFields: { responseType: 'blob' },
-    //         success: function(blob) {
-    //             const url = URL.createObjectURL(blob);
-    //             const link = document.createElement('a');
-    //             link.href = url;
-    //             link.download = 'document.pdf';
-    //             link.click();
-    //             URL.revokeObjectURL(url);
-    //         },
-    //         error: function(error) {
-    //             console.error('Error downloading PDF file:', error);
-    //         }
-    //     });
-    // });
     
     $('#downloadPDF').on('click', function () {
         // Collect selected columns
@@ -1144,9 +1123,9 @@
             return;
         }
 
-        const $btn = $(this)
-            .prop('disabled', true)
-            .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
+        // const $btn = $(this)
+        //     .prop('disabled', true)
+        //     .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
 
         // AJAX call to Laravel controller
         $.ajax({
@@ -1165,6 +1144,19 @@
                 link.href = window.URL.createObjectURL(blob);
                 link.download = 'document.pdf';
                 link.click();
+            },
+            error: function(xhr) {
+                if (xhr.status === 429) {
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        alert(res.message ?? "Daily limit reached.");
+                    } catch (e) {
+                        alert("Daily limit reached."); // fallback
+                    }
+                } else {
+                    console.error('Error downloading Excel file:', xhr);
+                    alert("Something went wrong!"); // generic error
+                }
             }
         });
     });

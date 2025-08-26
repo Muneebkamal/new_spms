@@ -18,12 +18,21 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             // Export count is uesd to count number of excel files exported a day
-            $table->integer('exportCount')->nullable();
+            $table->json('exportCount')->nullable();
+            // $table->integer('excel_export_count')->default(0);
+            // $table->integer('pdf_export_count')->default(0);
+
+            // Agent searchig limit related fields
+            // $table->integer('daily_search_count')->default(0);
+            // $table->date('last_search_date')->nullable();
             // User permission to see contacts
             $table->boolean('contact_permission')->nullable();
             // User pemission to see photos
             $table->boolean('photo_permission')->nullable();
             $table->boolean('image_merge_permission')->nullable();
+            
+            // this is for agent to reset his searching counter
+            $table->boolean('add_view_permission')->nullable();
             $table->string('role')->nullable();
             // Properties share list is for save id of properties which are added to sharelist by user
             $table->json('properties_share_list')->nullable();

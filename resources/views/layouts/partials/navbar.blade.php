@@ -88,17 +88,18 @@
                             發佈 (<span class="wa-selected">0</span>)
                         </a>
                     </li>
+                    {{-- Add property --}}
                     <li class="nav-item p-1">
-                        <a class="nav-link text-white font-weight-bold" href="#">新增物業</a>
+                        <a class="nav-link text-white font-weight-bold" href="{{ url('/add-property') }}">新增物業</a>
                     </li>
                     <li class="nav-item p-1">
-                        <a class="nav-link text-white font-weight-bold" href="#">增加瀏覽</a>
+                        <a class="nav-link text-white font-weight-bold" href="{{ url('/view-permission') }}">增加瀏覽</a>
                     </li>
                     <li class="nav-item p-1">
-                        <a class="nav-link text-white font-weight-bold" href="#">進階搜尋</a>
+                        <a class="nav-link text-white font-weight-bold" href="{{ url('/search-landlord') }}">進階搜尋</a>
                     </li>
                     <li class="nav-item p-1">
-                        <a class="nav-link text-white font-weight-bold" href="#">SPMS系統條用簡介</a>
+                        <a class="nav-link text-white font-weight-bold" href="{{ url('/announcements') }}">SPMS系統條用簡介</a>
                     </li>
                     <li class="nav-item p-1">
                         {{-- reset password --}}

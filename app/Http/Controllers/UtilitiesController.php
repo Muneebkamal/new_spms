@@ -67,6 +67,27 @@ class UtilitiesController extends Controller
         return response()->json(['success' => true]);
     }
     
+    public function updateAgentLimit(Request $request)
+    {
+        Utility::updateOrInsert(
+            ['key' => 'agent_limit_per_day'],
+            ['value' => $request->value]
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Agent limit updated successfully!',
+            'value' => $request->value
+        ]);
+    }
+
+    public function getAgentLimit()
+    {
+        $limit = Utility::where('key', 'agent_limit_per_day')
+            ->value('value');
+
+        return response()->json(['value' => $limit]);
+    }
 
     /**
      * Show the form for creating a new resource.

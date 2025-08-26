@@ -23,6 +23,7 @@
                                 <th style="width: 195px;">Contact Permission</th>
                                 <th style="width: 178px;">Photo Permission</th>
                                 <th style="width: 178px;">Image Merge Permission</th>
+                                <th style="width: 178px">Add View Permission</th>
                                 <th style="width: 95px;">Action</th>
                             </tr>
                         </thead>
@@ -44,7 +45,15 @@
                                         {{ $user->image_merge_permission ? 'checked' : '' }}>
                                     </td>
                                     <td>
+                                        <input type="checkbox" data-type="add_view" class="permission_check" data-id="{{ $user->id }}" 
+                                        {{ $user->add_view_permission ? 'checked' : '' }}>
+                                    </td>
+                                    <td>
                                         <button class="btn btn-block btn-sm btn-danger deleteUser" data-id="{{ $user->id }}">Delete</button>
+                                        <form action="{{ route('users.resetViews', $user->id) }}" method="POST" class="my-2">
+                                            @csrf
+                                            <button type="submit" class="btn log_btn">Add Views</button>
+                                        </form>
                                     </td>
                                 </tr>
                             @endforeach

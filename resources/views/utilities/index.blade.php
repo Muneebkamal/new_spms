@@ -3,27 +3,12 @@
 @section('content')
 <section>
     <div class="container bg-white pr-4 pl-4  log_section pb-5 pt-lg-4">
-        {{-- <h4 class="font-weight-bold text-center">Utilities</h4>
-        <div class="table-responsive">
-            <div id="example_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
-                <table class="table table-bordered table-striped dataTable no-footer" id="facilities_table" style="width: 100%;">
-                    <thead>
-                        <tr>
-                            <th style="width: 107px;">No</th>
-                            <th style="width: 153px;">Value</th>
-                            <th style="width: 173px;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
-        </div> --}}
-
-
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item">
-                <a class="nav-link active" id="photos-tab" data-toggle="tab" href="#districts" role="tab" aria-controls="photos" aria-selected="true">Districts</a>
+                <a class="nav-link active" id="setting-tab" data-toggle="tab" href="#setting" role="tab" aria-controls="photos" aria-selected="true">Setting</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="photos-tab" data-toggle="tab" href="#districts" role="tab" aria-controls="photos" aria-selected="true">Districts</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="listings-tab" data-toggle="tab" href="#facilities" role="tab" aria-controls="listings" aria-selected="false">Facilities</a>
@@ -39,7 +24,19 @@
             </li>
         </ul>
         <div class="tab-content" style="height: auto;">
-            <div class="tab-pane active p-3" id="districts" role="tabpanel" aria-labelledby="districts-tab">
+            <div class="tab-pane active p-3" id="setting" role="tabpanel" aria-labelledby="setting-tab">
+                <h4 class="font-weight-bold text-center">Setting</h4>
+                <div class="row py-3">
+                    <div class="col-md-6">
+                        <label for="agent_limit">Agent Per Day Limit for Search, Export Excel and PDF</label>
+                        <input type="number" id="agent_limit" name="agent_per_day_limit" class="form-control" />
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary save-agent-limit mt-4">Save</button>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane p-3" id="districts" role="tabpanel" aria-labelledby="districts-tab">
                 <h4 class="font-weight-bold text-center">Districts</h4>
                 <div class="row py-3">
                     <div class="col-md-8">
@@ -312,5 +309,39 @@
             }
         });
     });
+
+    // Save agent limit
+    $(document).on('click', '.save-agent-limit', function () {
+        let value = $('#agent_limit').val();
+
+        if (value.trim() !== '') {
+            $.ajax({
+                url: "{{ route('settings.agent-limit.update') }}",
+                type: 'POST',
+                data: {
+                    value: value,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function (response) {
+                    alert(response.message);
+                },
+                error: function (xhr) {
+                    alert('Something went wrong! ' + xhr.responseJSON.message);
+                }
+            });
+        }
+    });
+
+    // Load saved value
+    $.ajax({
+        url: "{{ route('settings.agent-limit.get') }}",
+        type: 'GET',
+        success: function (data) {
+            if (data.value) {
+                $('#agent_limit').val(data.value);
+            }
+        }
+    });
+
 </script>
 @endsection
